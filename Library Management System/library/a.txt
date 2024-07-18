@@ -1,0 +1,69 @@
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Scanner;
+
+public class Library {
+    // Other fields and methods...
+
+    public void renewItems(User user) {
+        Scanner scanner = new Scanner(System.in);
+        System.out.println("\nRenew Items:");
+        List<LibraryItem> checkedOutItems = getCheckedOutItems(user);
+        if (checkedOutItems.isEmpty()) {
+            System.out.println("You have no items currently checked out.");
+        } else {
+            System.out.println("Items currently checked out by you:");
+            for (LibraryItem item : checkedOutItems) {
+                System.out.println(item.getItemCode() + ": " + item.getItemName() + " (Due Date: " + item.getDueDate() + ")");
+            }
+            System.out.print("Enter the item code to renew (Enter 0 to stop): ");
+            String itemCode;
+            while (true) {
+                itemCode = scanner.nextLine();
+
+                if (itemCode.equals("0")) {
+                    break;
+                }
+
+                LibraryItem item = getLibraryItemByCode(itemCode);
+                if (item != null && checkedOutItems.contains(item)) {
+                    int renewalsLeft = item.getRenewalsLeft();
+                    if (renewalsLeft > 0) {
+                        System.out.println("You have " + renewalsLeft + " chance(s) to renew this item.");
+                        System.out.print("Do you want to renew this item? (yes/no): ");
+                        String answer = scanner.nextLine();
+                        if (answer.equalsIgnoreCase("yes")) {
+                            // Renew the item
+                            LocalDate newDueDate;
+                            if (item instanceof Book) {
+                                Book book = (Book) item;
+                                if (book.isBestSeller()) {
+                                    newDueDate = LocalDate.now().plusWeeks(2);
+                                } else {
+                                    newDueDate = LocalDate.now().plusWeeks(3);
+                                }
+                            } else if (item instanceof AudioVideoMaterial) {
+                                newDueDate = LocalDate.now().plusWeeks(2);
+                            } else {
+                                newDueDate = LocalDate.now(); // Unknown item type, set to today (due immediately)
+                            }
+                            item.setDueDate(newDueDate);
+                            item.setRenewalsLeft(renewalsLeft - 1); // Decrease the renewals left
+                            System.out.println("Item renewed: " + item.getItemName() + " (New Due Date: " + newDueDate + ")");
+                        } else {
+                            System.out.println("Renewal cancelled.");
+                        }
+                    } else {
+                        System.out.println("You don't have any renewals available for this item.");
+                    }
+                } else {
+                    System.out.println("Invalid item code or the item is not currently checked out by you.");
+                }
+
+                System.out.print("\nEnter the item code to renew (Enter 0 to stop): ");
+            }
+        }
+    }
+
+    // Other methods in the Library class...
+}
